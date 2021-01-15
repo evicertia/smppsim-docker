@@ -12,6 +12,8 @@ RUN  apk add --no-cache supervisor
 COPY ./files/SMPPSim.sh /opt/bin/SMPPSim.sh
 COPY ./files/main.sh /opt/bin/main.sh
 COPY ./files/smppsim.jar /opt/SMPPSim/
+COPY ./files/SMPPSim.ini /etc/supervisor.d/
+COPY ./conf/smppsim.props /opt/SMPPSim/conf/SMPPSim.props
 
 VOLUME /conf
 VOLUME /libs
