@@ -1,16 +1,24 @@
 ARG JAVA_VERSION=8-alpine
-ARG VERSION=0.0
+ARG NETCORE_VERSION=3.1-alpine3.12
+ARG VERSION="0.0.0.0"
+FROM mcr.microsoft.com/dotnet/core/sdk:${NETCORE_VERSION} AS build-env
 
-FROM openjdk:${JAVA_VERSION}
+WORKDIR /opt/SmppSimCatcher
 
-LABEL version=${VERSION}
-LABEL description="SMPP Simulator image for testing."
-LABEL maintainer="devs@evicertia.com"
+COPY SmppSimCatcher/SmppSimCatcher/ ./
+RUN dotnet restore && dotnet publish -c Release -o out
 
-RUN  apk add --no-cache supervisor
+#install java and net core sdk
+FROM mcr.microsoft.com/dotnet/core/aspnet:${NETCORE_VERSION} AS runtime
 
-COPY ./files/SMPPSim.sh /opt/bin/SMPPSim.sh
-COPY ./files/main.sh /opt/bin/main.sh
+WORKDIR /
+#dotnet run inside
+ENTRYPOINT [ "/opt/bin/main.sh"]
+
+RUN apk add supervisor && apk add openjdk8
+
+COPY ./files/SMPPSim.sh /opt/bin/
+COPY ./files/main.sh /opt/bin/
 COPY ./files/smppsim.jar /opt/SMPPSim/
 COPY ./files/SMPPSim.ini /etc/supervisor.d/
 COPY ./conf/smppsim.props /opt/SMPPSim/conf/SMPPSim.props
@@ -18,4 +26,8 @@ COPY ./conf/smppsim.props /opt/SMPPSim/conf/SMPPSim.props
 VOLUME /conf
 VOLUME /libs
 
-ENTRYPOINT [ "/opt/bin/main.sh"]
+COPY --from=build-env /opt/SmppSimCatcher/out /opt/SmppSimCatcher
+
+LABEL version=${VERSION} \
+    description="SMPP Simulator image for testing." \
+    maintainer="devs@evicertia.com"
