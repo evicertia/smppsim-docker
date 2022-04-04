@@ -24,6 +24,10 @@ function die ()
 
 [ -n "${1:-}" ] || die 1 "Missing settings file argument."
 
+# Reset message-id to avoid duplicates in db when restarting the service
+# See 26530
+sed -i -e "s|START_MESSAGE_ID_AT=.*|START_MESSAGE_ID_AT=$(date +%s)|" $1
+
 instance=$(basename $1 .props)
 _CONF=$1
 _LOG="/var/log/${instance}.log"
